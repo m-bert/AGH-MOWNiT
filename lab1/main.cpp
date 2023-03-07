@@ -23,6 +23,9 @@ int main(int argc, char *argv[])
     check_infinities();
     checkNaN();
 
+    int n = 10;
+    int arr[n];
+
     return 0;
 }
 
