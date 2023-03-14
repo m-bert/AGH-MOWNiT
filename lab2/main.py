@@ -33,19 +33,70 @@ def l(j, x, zeros):
     return value
 
 
-def L(x, zeros, values):
-    k = len(zeros)
+def L(x, points):
+    k = len(points)
+    zeros = [p[0] for p in points]
+
     value = 0
 
     for j in range(k):
-        value += values[j] * l(j, x, zeros)
+        value += points[j][1] * l(j, x, zeros)
 
     return value
 
 
-# zeros = [-9, -4, -1, 7]
-# values = [5, 2, -2, 9]
+points = [(-9, 5), (-4, 2), (-1, -2), (7, 9)]
 
-# t = np.arange(-9, 7, 0.1)
-# plt.plot(t, L(t, zeros, values))
-# plt.show()
+# Newton Polynomial
+
+
+def dividedDifference(points, size):
+    differences = [[0 for j in range(size)] for i in range(size)]
+
+    for i in range(size):
+        differences[i][0] = points[i][1]
+
+    for j in range(1, size):
+        for i in range(size - j):
+            differences[i][j] = (differences[i + 1][j - 1] - differences[i][j - 1]) / (
+                points[i + j][0] - points[i][0]
+            )
+
+    return differences[0][size - 1]
+
+
+def n(j, x, zeros):
+    if j == 0:
+        return 1
+
+    value = 1
+
+    for i in range(j):
+        value *= x - zeros[i]
+
+    return value
+
+
+def N(x, points):
+    k = len(points)
+    zeros = [p[0] for p in points]
+
+    value = 0
+
+    for j in range(k):
+        # print(dividedDifference(points, j + 1))
+        # print(n(j, x, zeros))
+        value += dividedDifference(points, j + 1) * n(j, x, zeros)
+
+    return value
+
+
+t = np.arange(-10, 8, 0.1)
+
+plt.plot(t, L(t, points))
+# plt.plot(t, N(t, points))
+
+for point in points:
+    plt.plot(point[0], point[1], marker="o", color="red")
+
+plt.show()
