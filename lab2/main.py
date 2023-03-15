@@ -100,20 +100,31 @@ def f(x):
 
 a = 0
 b = 3 * np.pi
-amount = 3
-
 t = np.arange(a, b, 0.1)
 
-X = chebyshevZeros(amount, a, b)
-print(X)
+interpolations = [L, N]
+nodesPositions = [chebyshevZeros, rangeNodes]
+nodes = [3, 4, 5, 7, 10, 15, 20]
 
+for interpolation in interpolations:
+    for nodePosition in nodesPositions:
+        for nodeAmount in nodes:
+            methodName = "Lagrange" if interpolation == L else "Newton"
+            nodesPosition = "Rownomierne" if nodePosition == rangeNodes else "Czebyszew"
 
-points = [(x, f(x)) for x in X]
+            X = nodePosition(nodeAmount, a, b)
+            points = [(x, f(x)) for x in X]
 
-plt.plot(t, N(t, points))
-plt.plot(t, f(t))
+            plt.title(
+                f"Interpolacja {methodName} rozklad {nodesPosition} n = {nodeAmount}"
+            )
+            plt.grid()
+            plt.plot(t, L(t, points), color="blue")
+            plt.plot(t, f(t), color="green")
 
-for point in points:
-    plt.plot(point[0], point[1], marker="o", color="red")
+            for point in points:
+                plt.plot(point[0], point[1], marker="o", color="red")
 
-plt.show()
+            plt.savefig(f"./screens/{methodName}_{nodesPosition}_{nodeAmount}.jpg")
+
+            plt.clf()
