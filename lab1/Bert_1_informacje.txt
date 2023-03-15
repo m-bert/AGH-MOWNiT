@@ -1,0 +1,11 @@
+Aby skompilować i uruchomić program należy wywołać następujące polecenia:
+
+Windows (CMD):
+
+g++ Bert_1_kod.cpp -o main.exe
+main
+
+Linux (Terminal):
+
+g++ Bert_1_kod.cpp -o main
+./main
