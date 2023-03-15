@@ -91,10 +91,26 @@ def N(x, points):
     return value
 
 
-t = np.arange(-10, 8, 0.1)
+# TESTING
 
-plt.plot(t, L(t, points))
-# plt.plot(t, N(t, points))
+def f(x):
+    return np.cos(x) * x
+
+
+a = 0
+b = 20
+amount = 5
+
+t = np.arange(a, b, 0.1)
+
+X = chebyshevZeros(amount, a, b)
+print(X)
+
+
+points = [(x, f(x)) for x in X]
+
+plt.plot(t, N(t, points))
+plt.plot(t, f(t))
 
 for point in points:
     plt.plot(point[0], point[1], marker="o", color="red")
