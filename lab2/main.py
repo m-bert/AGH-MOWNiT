@@ -93,13 +93,14 @@ def N(x, points):
 
 # TESTING
 
+
 def f(x):
-    return np.cos(x) * x
+    return np.sin(2 * x) * np.sin(x**2 / np.pi)
 
 
 a = 0
-b = 20
-amount = 5
+b = 3 * np.pi
+amount = 3
 
 t = np.arange(a, b, 0.1)
 
