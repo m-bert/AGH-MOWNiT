@@ -13,8 +13,6 @@ def chebyshevZeros(n, a, b):
 
 
 def rangeNodes(n, a, b):
-    # step = (b - a) / (n - 1)
-    # return np.arange(a, b + step, step)
     return np.linspace(a, b, n)
 
 
@@ -83,8 +81,6 @@ def N(x, points):
     value = 0
 
     for j in range(k):
-        # print(dividedDifference(points, j + 1))
-        # print(n(j, x, zeros))
         value += dividedDifference(points, j + 1) * n(j, x, zeros)
 
     return value
@@ -105,30 +101,63 @@ interpolations = [L, N]
 nodesPositions = [chebyshevZeros, rangeNodes]
 nodes = [3, 4, 5, 7, 10, 15, 20]
 
-for interpolation in interpolations:
-    for nodePosition in nodesPositions:
-        for nodeAmount in nodes:
-            methodName = "Lagrange" if interpolation == L else "Newton"
-            nodesPosition = (
-                "równomierny" if nodePosition == rangeNodes else "zer Czebyszewa"
-            )
 
-            X = nodePosition(nodeAmount, a, b)
-            points = [(x, f(x)) for x in X]
+def generate_plots():
 
-            if nodeAmount == 10 and nodePosition == rangeNodes:
-                print(points)
+    for interpolation in interpolations:
+        for nodePosition in nodesPositions:
+            for nodeAmount in nodes:
+                methodName = "Lagrange" if interpolation == L else "Newton"
+                nodesPosition = (
+                    "równomierny" if nodePosition == rangeNodes else "zer Czebyszewa"
+                )
 
-            plt.title(
-                f"Interpolacja {methodName}'a rozkład {nodesPosition} n = {nodeAmount}"
-            )
-            plt.grid()
-            plt.plot(t, interpolation(t, points), color="blue")
-            plt.plot(t, f(t), color="green")
+                X = nodePosition(nodeAmount, a, b)
+                points = [(x, f(x)) for x in X]
 
-            for point in points:
-                plt.plot(point[0], point[1], marker="o", color="red")
+                plt.title(
+                    f"Interpolacja {methodName}'a rozkład {nodesPosition} n = {nodeAmount}"
+                )
+                plt.grid()
+                plt.plot(t, interpolation(t, points), color="blue")
+                plt.plot(t, f(t), color="green")
 
-            plt.savefig(f"./screens/{methodName}_{nodesPosition}_{nodeAmount}.jpg")
+                for point in points:
+                    plt.plot(point[0], point[1], marker="o", color="red")
 
-            plt.clf()
+                plt.savefig(
+                    f"./screens/{methodName}_{nodesPosition}_{nodeAmount}.jpg")
+
+                plt.clf()
+
+    return
+
+
+def get_errors(n=1000):
+    domain = np.linspace(a, b, n)
+
+    for interpolation in interpolations:
+        for nodePosition in nodesPositions:
+            for nodeAmount in nodes:
+                X = nodePosition(nodeAmount, a, b)
+                points = [(x, f(x)) for x in X]
+
+                max_error_fn = np.vectorize(
+                    lambda x: np.abs(f(x) - interpolation(x, points))
+                )
+
+                avg_error_fn = np.vectorize(
+                    lambda x: (f(x) - interpolation(x, points)) ** 2
+                )
+
+                max_error = np.max(max_error_fn(domain))
+                avg_error = (np.sqrt(np.sum(avg_error_fn(domain)))) / (n-1)
+
+                variant = f"{interpolation.__name__}_{nodePosition.__name__}_{nodeAmount}"
+
+                print(max_error, avg_error, variant)
+
+    return
+
+
+get_errors()
