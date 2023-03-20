@@ -13,8 +13,9 @@ def chebyshevZeros(n, a, b):
 
 
 def rangeNodes(n, a, b):
-    step = (b - a) / n
-    return np.arange(a, b + step, step)
+    # step = (b - a) / (n - 1)
+    # return np.arange(a, b + step, step)
+    return np.linspace(a, b, n)
 
 
 #  Lagrange Polynomials
@@ -44,8 +45,6 @@ def L(x, points):
 
     return value
 
-
-points = [(-9, 5), (-4, 2), (-1, -2), (7, 9)]
 
 # Newton Polynomial
 
@@ -100,7 +99,7 @@ def f(x):
 
 a = 0
 b = 3 * np.pi
-t = np.arange(a, b, 0.1)
+t = np.arange(a, b, 0.01)
 
 interpolations = [L, N]
 nodesPositions = [chebyshevZeros, rangeNodes]
@@ -110,16 +109,21 @@ for interpolation in interpolations:
     for nodePosition in nodesPositions:
         for nodeAmount in nodes:
             methodName = "Lagrange" if interpolation == L else "Newton"
-            nodesPosition = "Rownomierne" if nodePosition == rangeNodes else "Czebyszew"
+            nodesPosition = (
+                "równomierny" if nodePosition == rangeNodes else "zer Czebyszewa"
+            )
 
             X = nodePosition(nodeAmount, a, b)
             points = [(x, f(x)) for x in X]
 
+            if nodeAmount == 10 and nodePosition == rangeNodes:
+                print(points)
+
             plt.title(
-                f"Interpolacja {methodName} rozklad {nodesPosition} n = {nodeAmount}"
+                f"Interpolacja {methodName}'a rozkład {nodesPosition} n = {nodeAmount}"
             )
             plt.grid()
-            plt.plot(t, L(t, points), color="blue")
+            plt.plot(t, interpolation(t, points), color="blue")
             plt.plot(t, f(t), color="green")
 
             for point in points:
