@@ -95,7 +95,7 @@ def f(x):
 
 a = 0
 b = 3 * np.pi
-t = np.arange(a, b, 0.01)
+t = np.linspace(a, b, 1000)
 
 interpolations = [L, N]
 nodesPositions = [chebyshevZeros, rangeNodes]
@@ -103,7 +103,6 @@ nodes = [3, 4, 5, 7, 10, 15, 20]
 
 
 def generate_plots():
-
     for interpolation in interpolations:
         for nodePosition in nodesPositions:
             for nodeAmount in nodes:
@@ -125,8 +124,7 @@ def generate_plots():
                 for point in points:
                     plt.plot(point[0], point[1], marker="o", color="red")
 
-                plt.savefig(
-                    f"./screens/{methodName}_{nodesPosition}_{nodeAmount}.jpg")
+                plt.savefig(f"./screens/{methodName}_{nodesPosition}_{nodeAmount}.jpg")
 
                 plt.clf()
 
@@ -151,13 +149,16 @@ def get_errors(n=1000):
                 )
 
                 max_error = np.max(max_error_fn(domain))
-                avg_error = (np.sqrt(np.sum(avg_error_fn(domain)))) / (n-1)
+                avg_error = (np.sqrt(np.sum(avg_error_fn(domain)))) / (n - 1)
 
-                variant = f"{interpolation.__name__}_{nodePosition.__name__}_{nodeAmount}"
+                variant = (
+                    f"{interpolation.__name__}_{nodePosition.__name__}_{nodeAmount}"
+                )
 
                 print(max_error, avg_error, variant)
 
     return
 
 
-get_errors()
+# get_errors()
+generate_plots()
