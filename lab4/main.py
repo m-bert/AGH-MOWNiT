@@ -109,6 +109,38 @@ def s(x, points, sigmaMatrix):
 def S(X, points, sigmaMatrix):
     return [s(x, points, sigmaMatrix) for x in X]
 
+
+# QUADRATIC INTERPOLATION
+
+def gamma(i, points):
+    return delta(1, i-1, points)
+
+
+def a(type, i, points):
+    return (b(type, i+1, points) - b(type, i, points)) / (2*(points[i+1][0] - points[i][0]))
+
+
+def b(type, i, points):
+    if i == 0:
+        return 0 if type == "natural" else gamma(1, points)
+
+    return 2 * gamma(i, points) - b(type, i-1, points)
+
+
+def q(x, points, type):
+    n = len(points)
+
+    i = min(binarySearch(0, n, x, points), n-2)
+
+    _a = a(type, i, points)
+    _b = b(type, i, points)
+
+    return _a * np.power((x - points[i][0]), 2) + _b * (x - points[i][0]) + points[i][1]
+
+
+def Q(X, points, type):
+    return [q(x, points, type) for x in X]
+
 # UTILS
 
 
@@ -126,7 +158,7 @@ def draw_custom_plot(n, A, B, nodesPosition):
         f"Interpolacja sześcienna rozkład {nodesPositionName} n = {n}"
     )
     plt.grid()
-    plt.plot(t, S(t, points, sigmaMatrix), color="blue")
+    plt.plot(t, Q(t, points, "natural"), color="blue")
     plt.plot(t, f(t), color="green")
 
     for point in points:
@@ -137,4 +169,4 @@ def draw_custom_plot(n, A, B, nodesPosition):
     return
 
 
-draw_custom_plot(50, 0, 3*np.pi, evenSpace)
+draw_custom_plot(20, 0, 3*np.pi, evenSpace)
