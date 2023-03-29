@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from enum import Enum
 
 #  FUNCTION
 
@@ -32,15 +33,6 @@ def getPoints(nodesPositionFn, n, a, b):
 # CUBIC INTERPOLATION
 
 
-def delta(degree, i, points):
-    if degree == 1:
-        return (points[i+1][1] - points[i][1])/(points[i+1][0] - points[i][0])
-    elif degree == 2:
-        return (delta(1, i+1, points) - delta(1, i, points)) / (points[i+1][0] - points[i-1][0])
-    elif degree == 3:
-        return (delta(2, i+1, points) - delta(2, i, points)) / (points[i+2][0] - points[i-1][0])
-
-
 def h(points, i):
     return points[i+1][0] - points[i][0]
 
@@ -58,7 +50,7 @@ def prepareMatrices(points, type):
 
         deltaMatrix[i] = delta(1, i, points) - delta(1, i-1, points)
 
-    if type == "cubic":
+    if type == Boundary.CUBIC:
         hMatrix[0][0] = -h(points, 0)
         hMatrix[0][1] = h(points, 0)
 
@@ -70,13 +62,61 @@ def prepareMatrices(points, type):
 
         sigmaMatrix = np.linalg.solve(hMatrix, deltaMatrix)
 
-    elif type == "natural":
+    elif type == Boundary.NATURAL:
         hMatrix[0][0] = 1
         hMatrix[n-1][n-1] = 1
 
         sigmaMatrix = np.linalg.solve(hMatrix, deltaMatrix)
 
     return sigmaMatrix
+
+
+def cubic(x, points, sigmaMatrix):
+    n = len(points)
+
+    i = min(binarySearch(0, n, x, points), n-2)
+    b = (points[i+1][1] - points[i][1])/h(points, i) - \
+        h(points, i) * (sigmaMatrix[i+1] + 2*sigmaMatrix[i])
+    c = 3 * sigmaMatrix[i]
+    d = (sigmaMatrix[i+1] - sigmaMatrix[i]) / h(points, i)
+
+    return points[i][1] + b * (x - points[i][0]) + c * np.power((x-points[i][0]), 2) + d * np.power((x - points[i][0]), 3)
+
+# QUADRATIC INTERPOLATION
+
+
+def a(type, i, points):
+    return (b(type, i+1, points) - b(type, i, points)) / (2*(points[i+1][0] - points[i][0]))
+
+
+def b(type, i, points):
+    if i == 0:
+        return 0 if type == Boundary.NATURAL else delta(1, 0, points)
+
+    return 2 * delta(1, i-1, points) - b(type, i-1, points)
+
+
+def quadratic(x, points, type):
+    n = len(points)
+
+    i = min(binarySearch(0, n, x, points), n-2)
+
+    _a = a(type, i, points)
+    _b = b(type, i, points)
+
+    return _a * np.power((x - points[i][0]), 2) + _b * (x - points[i][0]) + points[i][1]
+
+
+# COMMON
+
+class Boundary(Enum):
+    NATURAL = 0
+    CUBIC = 1
+    CLAMPED = 2
+
+
+def I(X, points, interpolation, interpolationArg):
+    return [interpolation(x, points, interpolationArg) for x in X]
 
 
 def binarySearch(p, q, x, points):
@@ -94,57 +134,18 @@ def binarySearch(p, q, x, points):
         return binarySearch(p, mid - 1, x, points)
 
 
-def s(x, points, sigmaMatrix):
-    n = len(points)
-
-    i = min(binarySearch(0, n, x, points), n-2)
-    b = (points[i+1][1] - points[i][1])/h(points, i) - \
-        h(points, i) * (sigmaMatrix[i+1] + 2*sigmaMatrix[i])
-    c = 3 * sigmaMatrix[i]
-    d = (sigmaMatrix[i+1] - sigmaMatrix[i]) / h(points, i)
-
-    return points[i][1] + b * (x - points[i][0]) + c * np.power((x-points[i][0]), 2) + d * np.power((x - points[i][0]), 3)
-
-
-def S(X, points, sigmaMatrix):
-    return [s(x, points, sigmaMatrix) for x in X]
-
-
-# QUADRATIC INTERPOLATION
-
-def gamma(i, points):
-    return delta(1, i-1, points)
-
-
-def a(type, i, points):
-    return (b(type, i+1, points) - b(type, i, points)) / (2*(points[i+1][0] - points[i][0]))
-
-
-def b(type, i, points):
-    if i == 0:
-        return 0 if type == "natural" else gamma(1, points)
-
-    return 2 * gamma(i, points) - b(type, i-1, points)
-
-
-def q(x, points, type):
-    n = len(points)
-
-    i = min(binarySearch(0, n, x, points), n-2)
-
-    _a = a(type, i, points)
-    _b = b(type, i, points)
-
-    return _a * np.power((x - points[i][0]), 2) + _b * (x - points[i][0]) + points[i][1]
-
-
-def Q(X, points, type):
-    return [q(x, points, type) for x in X]
+def delta(degree, i, points):
+    if degree == 1:
+        return (points[i+1][1] - points[i][1])/(points[i+1][0] - points[i][0])
+    elif degree == 2:
+        return (delta(1, i+1, points) - delta(1, i, points)) / (points[i+1][0] - points[i-1][0])
+    elif degree == 3:
+        return (delta(2, i+1, points) - delta(2, i, points)) / (points[i+2][0] - points[i-1][0])
 
 # UTILS
 
 
-def draw_custom_plot(n, A, B, nodesPosition):
+def draw_custom_plot(n, A, B, nodesPosition, interpolation, boundary):
     t = np.linspace(A, B, 1000)
 
     nodesPositionName = (
@@ -152,13 +153,15 @@ def draw_custom_plot(n, A, B, nodesPosition):
     )
 
     points = getPoints(nodesPosition, n, A, B)
-    sigmaMatrix = prepareMatrices(points, "cubic")
+
+    interpolationArg = prepareMatrices(
+        points, boundary) if interpolation == cubic else boundary
 
     plt.title(
-        f"Interpolacja sześcienna rozkład {nodesPositionName} n = {n}"
+        f"Interpolacja {interpolation.__name__}({boundary}) rozkład {nodesPositionName} n = {n}"
     )
     plt.grid()
-    plt.plot(t, Q(t, points, "natural"), color="blue")
+    plt.plot(t, I(t, points, interpolation, interpolationArg), color="blue")
     plt.plot(t, f(t), color="green")
 
     for point in points:
@@ -169,4 +172,4 @@ def draw_custom_plot(n, A, B, nodesPosition):
     return
 
 
-draw_custom_plot(20, 0, 3*np.pi, evenSpace)
+draw_custom_plot(10, 0, 3*np.pi, evenSpace, cubic, Boundary.NATURAL)
