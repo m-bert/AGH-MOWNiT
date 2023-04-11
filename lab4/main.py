@@ -246,7 +246,7 @@ def get_errors(interpolation, boundary):
     B = 3 * np.pi
     T = np.linspace(A, B, n)
 
-    nodes = [4, 5, 7, 10, 15, 20, 30]
+    nodes = [4, 5, 7, 10, 15, 20, 30, 50, 100]
 
     for nodeAmount in nodes:
 
@@ -283,5 +283,5 @@ def get_all_errors():
     return
 
 
-get_all_errors()
-# draw_custom_plot(3, 0, 3*np.pi, evenSpace, cubic, Boundary.CUBIC)
+# get_all_errors()
+draw_custom_plot(60, 0, 3*np.pi, evenSpace, cubic, Boundary.CUBIC)
