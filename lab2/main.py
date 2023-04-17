@@ -13,8 +13,7 @@ def chebyshevZeros(n, a, b):
 
 
 def rangeNodes(n, a, b):
-    step = (b - a) / n
-    return np.arange(a, b + step, step)
+    return np.linspace(a, b, n)
 
 
 #  Lagrange Polynomials
@@ -44,8 +43,6 @@ def L(x, points):
 
     return value
 
-
-points = [(-9, 5), (-4, 2), (-1, -2), (7, 9)]
 
 # Newton Polynomial
 
@@ -84,8 +81,6 @@ def N(x, points):
     value = 0
 
     for j in range(k):
-        # print(dividedDifference(points, j + 1))
-        # print(n(j, x, zeros))
         value += dividedDifference(points, j + 1) * n(j, x, zeros)
 
     return value
@@ -93,26 +88,77 @@ def N(x, points):
 
 # TESTING
 
+
 def f(x):
-    return np.cos(x) * x
+    return np.sin(2 * x) * np.sin(x**2 / np.pi)
 
 
 a = 0
-b = 20
-amount = 5
+b = 3 * np.pi
+t = np.linspace(a, b, 1000)
 
-t = np.arange(a, b, 0.1)
+interpolations = [L, N]
+nodesPositions = [chebyshevZeros, rangeNodes]
+nodes = [3, 4, 5, 7, 10, 15, 20]
 
-X = chebyshevZeros(amount, a, b)
-print(X)
+
+def generate_plots():
+    for interpolation in interpolations:
+        for nodePosition in nodesPositions:
+            for nodeAmount in nodes:
+                methodName = "Lagrange" if interpolation == L else "Newton"
+                nodesPosition = (
+                    "równomierny" if nodePosition == rangeNodes else "zer Czebyszewa"
+                )
+
+                X = nodePosition(nodeAmount, a, b)
+                points = [(x, f(x)) for x in X]
+
+                plt.title(
+                    f"Interpolacja {methodName}'a rozkład {nodesPosition} n = {nodeAmount}"
+                )
+                plt.grid()
+                plt.plot(t, interpolation(t, points), color="blue")
+                plt.plot(t, f(t), color="green")
+
+                for point in points:
+                    plt.plot(point[0], point[1], marker="o", color="red")
+
+                plt.savefig(f"./screens/{methodName}_{nodesPosition}_{nodeAmount}.jpg")
+
+                plt.clf()
+
+    return
 
 
-points = [(x, f(x)) for x in X]
+def get_errors(n=1000):
+    domain = np.linspace(a, b, n)
 
-plt.plot(t, N(t, points))
-plt.plot(t, f(t))
+    for interpolation in interpolations:
+        for nodePosition in nodesPositions:
+            for nodeAmount in nodes:
+                X = nodePosition(nodeAmount, a, b)
+                points = [(x, f(x)) for x in X]
 
-for point in points:
-    plt.plot(point[0], point[1], marker="o", color="red")
+                max_error_fn = np.vectorize(
+                    lambda x: np.abs(f(x) - interpolation(x, points))
+                )
 
-plt.show()
+                avg_error_fn = np.vectorize(
+                    lambda x: (f(x) - interpolation(x, points)) ** 2
+                )
+
+                max_error = np.max(max_error_fn(domain))
+                avg_error = (np.sqrt(np.sum(avg_error_fn(domain)))) / (n - 1)
+
+                variant = (
+                    f"{interpolation.__name__}_{nodePosition.__name__}_{nodeAmount}"
+                )
+
+                print(max_error, avg_error, variant)
+
+    return
+
+
+# get_errors()
+generate_plots()
