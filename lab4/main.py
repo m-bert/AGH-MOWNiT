@@ -194,7 +194,7 @@ def generate_plots(interpolation, boundary):
     A = 0
     B = 3 * np.pi
     T = np.linspace(A, B, 1000)
-    nodes = [4, 5, 7, 10, 15, 20, 30]
+    nodes = [4, 5, 7, 10, 15, 20, 30, 50, 100]
 
     for nodeAmount in nodes:
         methodName = "F. sklejana"
@@ -283,5 +283,8 @@ def get_all_errors():
     return
 
 
-# get_all_errors()
-draw_custom_plot(60, 0, 3*np.pi, evenSpace, cubic, Boundary.CUBIC)
+generate_all_plots()
+get_all_errors()
+
+# draw_custom_plot(n=60, A=0, B=3*np.pi, nodesPosition=evenSpace,
+#                  interpolation=cubic, boundary=Boundary.CUBIC)
