@@ -79,10 +79,14 @@ def generatePlots(nodesPosition, N, M):
 
     for n in N:
         for m in M:
+            if m >= n:
+                continue
+
             P = getPoints(nodesPosition, n, START, END)
             A = calculateCoefficientsMatrix(m, P)
 
-            plt.title(f"LSA_{n}n_{m}m")
+            plt.title(
+                f"Aproksymacja średniokwadratowa, n={n}, m={m}")
             plt.grid()
             plt.plot(T, LSA(T, m, A), color="blue")
             plt.plot(T, f(T), color="green")
@@ -100,25 +104,27 @@ def generatePlots(nodesPosition, N, M):
 
 
 def getErrors(nodesPosition, N, M):
-    T = np.linspace(START, END, 1000)
+    ERROR_POINTS = 1000
+    T = np.linspace(START, END, ERROR_POINTS)
 
     for n in N:
         for m in M:
+            if m >= n:
+                continue
+
             P = getPoints(nodesPosition, n, START, END)
             A = calculateCoefficientsMatrix(m, P)
 
             max_error_fn = np.vectorize(
-                lambda x: np.abs(
-                    f(x) - approx(x, m, A))
+                lambda x: np.abs(f(x) - approx(x, m, A))
             )
 
             avg_error_fn = np.vectorize(
-                lambda x: (
-                    f(x) - approx(x, m, A)) ** 2
+                lambda x: (f(x) - approx(x, m, A)) ** 2
             )
 
             max_error = np.max(max_error_fn(T))
-            avg_error = (np.sqrt(np.sum(avg_error_fn(T)))) / (n-1)
+            avg_error = (np.sqrt(np.sum(avg_error_fn(T)))) / (ERROR_POINTS-1)
 
             variant = f"LSA_{n}n_{m}m"
 
@@ -133,7 +139,8 @@ def draw_custom_plot(n, START, END, nodesPosition, m):
     P = getPoints(nodesPosition, n, START, END)
     A = calculateCoefficientsMatrix(m, P)
 
-    plt.title(f"LSA_{n}n_{m}m")
+    plt.title(
+        f"Aproksymacja średniokwadratowa wielomianami algebraicznymi, n={n}, m={m}")
     plt.grid()
     plt.plot(T, LSA(T, m, A), color="blue")
     plt.plot(T, f(T), color="green")
@@ -150,6 +157,6 @@ N = [4, 10, 15, 20, 30, 50, 75, 100]
 M = [2, 4, 6, 10]
 
 
-# getErrors(evenSpace, N, M)
+getErrors(evenSpace, N, M)
 generatePlots(evenSpace, N, M)
-# draw_custom_plot(50, START, END, evenSpace, 6)
+# draw_custom_plot(20, START, END, evenSpace, 25)
