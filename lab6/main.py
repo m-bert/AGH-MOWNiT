@@ -65,14 +65,14 @@ def LSA_Trig(X, m, A, B):
     return [approx(x, m, A, B) for x in X]
 
 
-def draw_custom_plot(n, START, END, nodesPosition, m):
+def draw_custom_plot(n, START, END, m):
     T = np.linspace(START, END, 1000)
 
-    P = getPoints(nodesPosition, n, START, END)
+    P = getPoints(evenSpace, n, START, END)
     A, B = calculate_coefficients(P)
 
     plt.title(
-        f"Aproksymacja średniokwadratowa (bez cosinusów), n={n}, m={m}")
+        f"Aproksymacja średniokwadratowa n={n}, m={m}")
     plt.grid()
     plt.plot(T, LSA_Trig(T, m, A, B), color="blue")
     plt.plot(T, f(T), color="green")
@@ -144,10 +144,10 @@ def getErrors(nodesPosition, N, M):
     return
 
 
-draw_custom_plot(20, START, END, evenSpace, 9)
+# draw_custom_plot(20, START, END, 9)
 
 N = [4, 8, 10, 20, 30, 50, 100, 120]
 M = [1, 2, 4, 6, 10, 15, 20, 35, 50]
 
-# getErrors(evenSpace, N, M)
-# generatePlots(evenSpace, N, M)
+getErrors(evenSpace, N, M)
+generatePlots(evenSpace, N, M)
