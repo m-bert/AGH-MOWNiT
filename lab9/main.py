@@ -75,3 +75,19 @@ SIZES = [5, 10, 15, 20]
 a = createMatrixA1(10, np.float64)
 x = getXVector(10)
 b = calculateBVector(a, x)
+
+
+for matrixType in MATRIX_TYPES:
+    for precision in PRECISIONS:
+        for size in SIZES:
+            A = matrixType(size, precision)
+            X = getXVector(size)
+            B = calculateBVector(A, X)
+
+            calculatedX = GaussianElimination(A, B)
+
+            task = 1 if matrixType == createMatrixA1 else 2
+
+            print(task, precision.__name__, size)
+            print(X)
+            print(calculatedX)
