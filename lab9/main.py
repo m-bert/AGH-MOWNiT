@@ -9,24 +9,45 @@ def printMatrix(M):
 
 
 def createMatrixA1(n, precision):
-    return np.array([[1 if i == 0 else 1/(i+j+1) for j in range(n)]
-                     for i in range(n)]).astype(precision)
+    return np.array(
+        [[1 if i == 0 else 1 / (i + j + 1) for j in range(n)] for i in range(n)]
+    ).astype(precision)
 
 
 def createMatrixA2(n, precision):
-    return np.array([[2*(i+1)/(j+1) if j >= i else 2*(j+1)/(i+1) for j in range(n)]
-                     for i in range(n)]).astype(precision)
+    return np.array(
+        [
+            [
+                2 * (i + 1) / (j + 1) if j >= i else 2 * (j + 1) / (i + 1)
+                for j in range(n)
+            ]
+            for i in range(n)
+        ]
+    ).astype(precision)
 
 
-def getXVector(n):
+def getXVector(n, precision):
     x = np.random.randint(2, size=n)
     x[x == 0] = -1
 
-    return x
+    return np.array(x).astype(precision)
 
 
 def calculateBVector(A, X):
     return A @ X
+
+
+def calculateError(expected, got, precision):
+    diff = np.array([expected[i] - got[i] for i in range(len(expected))]).astype(
+        precision
+    )
+
+    squareSum = 0
+
+    for i in range(len(expected)):
+        squareSum += np.power(diff[i], 2)
+
+    return np.sqrt(squareSum)
 
 
 def GaussianElimination(A, B):
@@ -37,7 +58,7 @@ def GaussianElimination(A, B):
     currentRow = 0
     currentCol = 0
 
-    while currentRow < n and currentCol < n+1:
+    while currentRow < n and currentCol < n + 1:
         iMax = np.argmax(np.abs(A[currentRow:, currentCol])) + currentRow
 
         if A[iMax][currentCol] == 0:
@@ -58,7 +79,7 @@ def GaussianElimination(A, B):
 
     X = np.zeros(n)
 
-    for i in range(n-1, -1, -1):
+    for i in range(n - 1, -1, -1):
         X[i] = A[i][n] / A[i][i]
 
         for j in range(i - 1, -1, -1):
@@ -68,26 +89,46 @@ def GaussianElimination(A, B):
 
 
 MATRIX_TYPES = [createMatrixA1, createMatrixA2]
-PRECISIONS = [np.float16, np.float32, np.float64]
-SIZES = [5, 10, 15, 20]
+PRECISIONS = [np.float32, np.float64, np.float128]
+SIZES = [i for i in range(3, 30 + 1)]
 
 
-a = createMatrixA1(10, np.float64)
-x = getXVector(10)
-b = calculateBVector(a, x)
+with open("results.txt", "w") as f:
+    for matrixType in MATRIX_TYPES:
+        for precision in PRECISIONS:
+            for size in SIZES:
+                A = matrixType(size, precision)
+                X = getXVector(size, precision)
+                B = calculateBVector(A, X)
 
+                calculatedX = GaussianElimination(A, B)
 
-for matrixType in MATRIX_TYPES:
-    for precision in PRECISIONS:
-        for size in SIZES:
-            A = matrixType(size, precision)
-            X = getXVector(size)
-            B = calculateBVector(A, X)
+                task = 1 if matrixType == createMatrixA1 else 2
 
-            calculatedX = GaussianElimination(A, B)
+                print(task, precision.__name__, size)
+                print(X)
+                print(calculatedX)
 
-            task = 1 if matrixType == createMatrixA1 else 2
+                str1 = f"{task}\t{precision.__name__}\t{size}\n"
+                str2 = f"{X}\n"
+                str3 = f"{calculatedX}\n"
+                str4 = (
+                    f"Wskaźnik uwarunkowania: {np.linalg.cond(A, p='fro')}\n"
+                    if precision != np.float128
+                    else "\n"
+                )
+                # str5 = f"Błąd: {np.linalg.norm(X - calculatedX)}\n"
+                str5 = f"Błąd: {calculateError(X, calculatedX, precision)}\n"
 
-            print(task, precision.__name__, size)
-            print(X)
-            print(calculatedX)
+                f.write(
+                    "==============================================================================\n"
+                )
+                f.write(str1)
+                f.write(str2)
+                f.write(str3)
+                f.write(str4)
+                f.write(str5)
+                f.write(
+                    "==============================================================================\n"
+                )
+                f.write("\n")
