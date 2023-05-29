@@ -1,38 +1,64 @@
 import numpy as np
+from timeit import default_timer as timer
 
 
-def TDMA(a, b, c, d):
-    n = len(d)
-    w = np.zeros(n - 1, float)
-    g = np.zeros(n, float)
-    p = np.zeros(n, float)
-
-    w[0] = c[0] / b[0]
-    g[0] = d[0] / b[0]
-
-    for i in range(1, n - 1):
-        w[i] = c[i] / (b[i] - a[i - 1] * w[i - 1])
-    for i in range(1, n):
-        g[i] = (d[i] - a[i - 1] * g[i - 1]) / (b[i] - a[i - 1] * w[i - 1])
-    p[n - 1] = g[n - 1]
-    for i in range(n - 1, 0, -1):
-        p[i - 1] = g[i - 1] - w[i - 1] * p[i]
-    return p
+def calculateError(expected, got):
+    return np.sqrt(np.sum(np.power(expected-got, 2)))
 
 
-def createADiagonals(n, m, size):
-    diagonal = [(-m * i * n) for i in range(size)]
-    lowerDiagonal = [m / i for i in range(1, size)]
-    upperDiagonal = [i for i in range(size - 1)]
+def TDMA(n, m, size, solutions, precision):
+    lowerDiagonal, mainDiagonal, upperDiagonal = createDiagonals(
+        n, m, size, precision)
 
-    print(diagonal)
-    print(lowerDiagonal)
-    print(upperDiagonal)
+    startTime = timer()
+
+    c = np.zeros(shape=size-1).astype(precision)
+    c[0] = upperDiagonal[0] / mainDiagonal[0]
+
+    for i in range(1, size-1):
+        c[i] = upperDiagonal[i] / (mainDiagonal[i] - c[i-1])
+
+    d = np.zeros(shape=size).astype(precision)
+    d[0] = solutions[0] / mainDiagonal[0]
+
+    for i in range(1, size):
+        d[i] = (solutions[i] - lowerDiagonal[i-1] * d[i-1]) / \
+            (mainDiagonal[i] - lowerDiagonal[i-1] * c[i-1])
+
+    x = np.zeros(shape=size).astype(precision)
+    x[size-1] = d[size-1]
+
+    for i in range(size-2, -1, -1):
+        x[i] = d[i] - c[i] * x[i+1]
+
+    endTime = timer()
+
+    return x, endTime - startTime
 
 
-def createAMatrix(size, precision):
-    A = np.zeros(size)
-    return
+def createDiagonals(n, m, size, precision):
+    diagonal = np.array([(-m * (i+1) * n)
+                        for i in range(size)]).astype(precision)
+    lowerDiagonal = np.array([m / (i+1)
+                             for i in range(1, size)]).astype(precision)
+    upperDiagonal = np.array([(i+1)
+                             for i in range(size - 1)]).astype(precision)
+
+    return lowerDiagonal, diagonal, upperDiagonal
+
+
+def createAMatrix(n, m, size, precision):
+    A = np.zeros(shape=(size, size)).astype(precision)
+
+    for i in range(size):
+        A[i][i] = (-m * (i+1) * n)
+
+        if i+1 < size and i+1 >= 0:
+            A[i][i+1] = (i+1)
+        if i-1 < size and i-1 >= 0:
+            A[i][i-1] = m/(i+1)
+
+    return A
 
 
 def getXVector(n, precision):
@@ -46,10 +72,15 @@ def calculateBVector(A, X):
     return A @ X
 
 
-size = 10
+N = 11
+M = 35
+SIZE = 10
+PREC = np.float64
 
-X = getXVector(size, np.float64)
-A = createAMatrix(11, 35, size)
+X = getXVector(SIZE, PREC)
+A = createAMatrix(N, M, SIZE, PREC)
 B = calculateBVector(A, X)
 
-print()
+result, elapsedTime = TDMA(N, M, SIZE, B, PREC)
+
+print(calculateError(X, result), elapsedTime)

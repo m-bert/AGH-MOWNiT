@@ -1,4 +1,5 @@
 import numpy as np
+from timeit import default_timer as timer
 
 
 def printMatrix(M):
@@ -10,7 +11,8 @@ def printMatrix(M):
 
 def createMatrixA1(n, precision):
     return np.array(
-        [[1 if i == 0 else 1 / (i + j + 1) for j in range(n)] for i in range(n)]
+        [[1 if i == 0 else 1 / (i + j + 1) for j in range(n)]
+         for i in range(n)]
     ).astype(precision)
 
 
@@ -37,23 +39,16 @@ def calculateBVector(A, X):
     return A @ X
 
 
-def calculateError(expected, got, precision):
-    diff = np.array([expected[i] - got[i] for i in range(len(expected))]).astype(
-        precision
-    )
-
-    squareSum = 0
-
-    for i in range(len(expected)):
-        squareSum += np.power(diff[i], 2)
-
-    return np.sqrt(squareSum)
+def calculateError(expected, got):
+    return np.sqrt(np.sum(np.power(expected-got, 2)))
 
 
 def GaussianElimination(A, B):
     n = len(B)
 
     A = np.hstack((A, B.reshape(-1, 1)))
+
+    startTime = timer()
 
     currentRow = 0
     currentCol = 0
@@ -85,7 +80,9 @@ def GaussianElimination(A, B):
         for j in range(i - 1, -1, -1):
             A[j][n] -= A[j][i] * X[i]
 
-    return X
+    endTime = timer()
+
+    return X, startTime - endTime
 
 
 MATRIX_TYPES = [createMatrixA1, createMatrixA2]
@@ -101,7 +98,7 @@ with open("results.txt", "w") as f:
                 X = getXVector(size, precision)
                 B = calculateBVector(A, X)
 
-                calculatedX = GaussianElimination(A, B)
+                calculatedX, elapsedTime = GaussianElimination(A, B)
 
                 task = 1 if matrixType == createMatrixA1 else 2
 
@@ -118,7 +115,7 @@ with open("results.txt", "w") as f:
                     else "\n"
                 )
                 # str5 = f"Błąd: {np.linalg.norm(X - calculatedX)}\n"
-                str5 = f"Błąd: {calculateError(X, calculatedX, precision)}\n"
+                str5 = f"Błąd: {calculateError(X, calculatedX)}\n"
 
                 f.write(
                     "==============================================================================\n"
