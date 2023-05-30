@@ -99,33 +99,14 @@ with open("results.txt", "w") as f:
                 B = calculateBVector(A, X)
 
                 calculatedX, elapsedTime = GaussianElimination(A, B)
+                error = calculateError(X, calculatedX)
 
                 task = 1 if matrixType == createMatrixA1 else 2
 
-                print(task, precision.__name__, size)
-                print(X)
-                print(calculatedX)
+                # str4 = (
+                #     f"Wskaźnik uwarunkowania: {np.linalg.cond(A, p='fro')}\n"
+                #     if precision != np.float128
+                #     else "\n"
+                # )
 
-                str1 = f"{task}\t{precision.__name__}\t{size}\n"
-                str2 = f"{X}\n"
-                str3 = f"{calculatedX}\n"
-                str4 = (
-                    f"Wskaźnik uwarunkowania: {np.linalg.cond(A, p='fro')}\n"
-                    if precision != np.float128
-                    else "\n"
-                )
-                # str5 = f"Błąd: {np.linalg.norm(X - calculatedX)}\n"
-                str5 = f"Błąd: {calculateError(X, calculatedX)}\n"
-
-                f.write(
-                    "==============================================================================\n"
-                )
-                f.write(str1)
-                f.write(str2)
-                f.write(str3)
-                f.write(str4)
-                f.write(str5)
-                f.write(
-                    "==============================================================================\n"
-                )
-                f.write("\n")
+                f.write(f"{size}\t {error}\t {precision.__name__}\n")
