@@ -89,6 +89,9 @@ MATRIX_TYPES = [createMatrixA1, createMatrixA2]
 PRECISIONS = [np.float32, np.float64, np.float128]
 SIZES = [i for i in range(3, 30 + 1)]
 
+for s in [50, 100, 350, 500]:
+    SIZES.append(s)
+
 
 with open("results.txt", "w") as f:
     for matrixType in MATRIX_TYPES:
@@ -103,10 +106,18 @@ with open("results.txt", "w") as f:
 
                 task = 1 if matrixType == createMatrixA1 else 2
 
-                # str4 = (
-                #     f"Wskaźnik uwarunkowania: {np.linalg.cond(A, p='fro')}\n"
-                #     if precision != np.float128
-                #     else "\n"
-                # )
+                str4 = (
+                    f"Wskaźnik uwarunkowania: {np.linalg.cond(A, p='fro')}\n"
+                    if precision != np.float128
+                    else "\n"
+                )
 
                 f.write(f"{size}\t {error}\t {precision.__name__}\n")
+
+
+# with open("results.txt", "w") as f:
+#     for matrixType in MATRIX_TYPES:
+#         for size in SIZES:
+#             A = matrixType(size, np.float64)
+#             f.write(
+#                 f"{matrixType.__name__}\t{size}\t {np.linalg.cond(A, p='fro')}\t\n")

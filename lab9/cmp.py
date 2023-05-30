@@ -36,6 +36,48 @@ def TDMA(n, m, size, solutions, precision):
     return x, endTime - startTime
 
 
+def GaussianElimination(A, B):
+    n = len(B)
+
+    A = np.hstack((A, B.reshape(-1, 1)))
+
+    startTime = timer()
+
+    currentRow = 0
+    currentCol = 0
+
+    while currentRow < n and currentCol < n + 1:
+        iMax = np.argmax(np.abs(A[currentRow:, currentCol])) + currentRow
+
+        if A[iMax][currentCol] == 0:
+            currentCol += 1
+            continue
+
+        A[[iMax, currentRow]] = A[[currentRow, iMax]]
+
+        for row in range(currentRow + 1, n):
+            ratio = A[row][currentCol] / A[currentRow][currentCol]
+            A[row][currentCol] = 0
+
+            for col in range(currentCol + 1, n + 1):
+                A[row][col] -= A[currentRow][col] * ratio
+
+        currentRow += 1
+        currentCol += 1
+
+    X = np.zeros(n)
+
+    for i in range(n - 1, -1, -1):
+        X[i] = A[i][n] / A[i][i]
+
+        for j in range(i - 1, -1, -1):
+            A[j][n] -= A[j][i] * X[i]
+
+    endTime = timer()
+
+    return X, endTime - startTime
+
+
 def createDiagonals(n, m, size, precision):
     diagonal = np.array([(-m * (i+1) - n)
                         for i in range(size)]).astype(precision)
@@ -74,13 +116,28 @@ def calculateBVector(A, X):
 
 N = 11
 M = 35
-SIZE = 500
-PREC = np.float64
 
-X = getXVector(SIZE, PREC)
-A = createAMatrix(N, M, SIZE, PREC)
-B = calculateBVector(A, X)
+PRECISIONS = [np.float32, np.float64, np.float128]
+SIZES = [i for i in range(3, 30 + 1)]
 
-result, elapsedTime = TDMA(N, M, SIZE, B, PREC)
+for s in [50, 100]:
+    SIZES.append(s)
 
-print(calculateError(X, result), elapsedTime)
+
+with open("cmp.txt", "w") as f:
+    for precision in PRECISIONS:
+        for size in SIZES:
+            A = createAMatrix(N, M, size, precision)
+            X = getXVector(size, precision)
+            B = calculateBVector(A, X)
+
+            GaussCalculatedX, GaussElapsedTime = GaussianElimination(A, B)
+            GaussError = calculateError(X, GaussCalculatedX)
+
+            ThomasCalculatedX, ThomasElapsedTime = TDMA(
+                N, M, size, B, precision)
+
+            ThomasError = calculateError(X, ThomasCalculatedX)
+
+            f.write(
+                f"{size}\t{ThomasError}\t{ThomasElapsedTime}\t{GaussError}\t{GaussElapsedTime}\t{precision.__name__}\n")
