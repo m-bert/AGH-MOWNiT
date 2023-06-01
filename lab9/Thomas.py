@@ -13,17 +13,17 @@ def TDMA(n, m, size, solutions, precision):
     startTime = timer()
 
     c = np.zeros(shape=size-1).astype(precision)
-    c[0] = upperDiagonal[0] / mainDiagonal[0]
+    # c[0] = upperDiagonal[0] / mainDiagonal[0]
 
-    for i in range(1, size-1):
-        c[i] = upperDiagonal[i] / (mainDiagonal[i] - c[i-1])
+    for i in range(size-1):
+        c[i] = upperDiagonal[i] / (mainDiagonal[i] - lowerDiagonal[i] * c[i-1])
 
     d = np.zeros(shape=size).astype(precision)
-    d[0] = solutions[0] / mainDiagonal[0]
+    # d[0] = solutions[0] / mainDiagonal[0]
 
-    for i in range(1, size):
-        d[i] = (solutions[i] - lowerDiagonal[i-1] * d[i-1]) / \
-            (mainDiagonal[i] - lowerDiagonal[i-1] * c[i-1])
+    for i in range(size):
+        d[i] = (solutions[i] - lowerDiagonal[i] * d[i-1]) / \
+            (mainDiagonal[i] - lowerDiagonal[i] * c[i-1])
 
     x = np.zeros(shape=size).astype(precision)
     x[size-1] = d[size-1]
@@ -39,10 +39,16 @@ def TDMA(n, m, size, solutions, precision):
 def createDiagonals(n, m, size, precision):
     diagonal = np.array([(-m * (i+1) - n)
                         for i in range(size)]).astype(precision)
-    lowerDiagonal = np.array([m / (i+1)
-                             for i in range(1, size)]).astype(precision)
-    upperDiagonal = np.array([(i+1)
-                             for i in range(size - 1)]).astype(precision)
+
+    ld = [m / (i+1)for i in range(1, size)]
+    ld.insert(0, 0)
+
+    lowerDiagonal = np.array(ld).astype(precision)
+
+    ud = [(i+1) for i in range(size - 1)]
+    ud.append(0)
+
+    upperDiagonal = np.array(ud).astype(precision)
 
     return lowerDiagonal, diagonal, upperDiagonal
 
@@ -72,15 +78,15 @@ def calculateBVector(A, X):
     return A @ X
 
 
-N = 11
-M = 35
+K = 3
+M = 4
 SIZE = 500
-PREC = np.float64
+PREC = np.float32
 
 X = getXVector(SIZE, PREC)
-A = createAMatrix(N, M, SIZE, PREC)
+A = createAMatrix(K, M, SIZE, PREC)
 B = calculateBVector(A, X)
 
-result, elapsedTime = TDMA(N, M, SIZE, B, PREC)
+result, elapsedTime = TDMA(K, M, SIZE, B, PREC)
 
 print(calculateError(X, result), elapsedTime)
